@@ -2,6 +2,9 @@
 fn main() {
     println!("Part one example: {}", part_one("example"));
     println!("Part one input: {}", part_one("input"));
+
+    println!("Part two example: {}", part_two("example"));
+    println!("Part two example: {}", part_two("input"));
 }
 
 struct Game {
@@ -31,6 +34,59 @@ impl Game {
         self.rounds
             .iter()
             .all(|round| round.iter().all(Color::check))
+    }
+
+    fn max_values(&self) -> ColorSet {
+        let mut max_values = ColorSet::new();
+
+        self.rounds.iter().for_each(|round| {
+            round.iter().for_each(|color| {
+                max_values.update_if_greater(color);
+            })
+        });
+
+        return max_values;
+    }
+}
+
+#[derive(Debug)]
+struct ColorSet {
+    red: u32,
+    green: u32,
+    blue: u32,
+}
+
+impl ColorSet {
+    fn new() -> Self {
+        ColorSet {
+            red: 0,
+            green: 0,
+            blue: 0,
+        }
+    }
+
+    fn update_if_greater(&mut self, color: &Color) {
+        match color {
+            Color::Red(n) => {
+                if *n > self.red {
+                    self.red = *n
+                }
+            }
+            Color::Green(n) => {
+                if *n > self.green {
+                    self.green = *n
+                }
+            }
+            Color::Blue(n) => {
+                if *n > self.blue {
+                    self.blue = *n
+                }
+            }
+        }
+    }
+
+    fn powers(&self) -> u32 {
+        self.red * self.green * self.blue
     }
 }
 
@@ -81,4 +137,18 @@ fn part_one(filename: &str) -> u32 {
         .sum::<u32>();
 
     return sum;
+}
+
+fn part_two(filename: &str) -> u32 {
+    let text = std::fs::read_to_string(filename).unwrap();
+    let games = text.trim().lines().map(Game::parse).collect::<Vec<_>>();
+
+    let max_values = games
+        .iter()
+        .map(|game| game.max_values())
+        .collect::<Vec<_>>();
+
+    let power_sum = max_values.iter().map(|values| values.powers()).sum::<u32>();
+
+    return power_sum;
 }
