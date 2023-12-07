@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 fn main() {
     println!("Part one example: {}", part_one("example"));
     println!("Part one actual:  {}", part_one("input"));
@@ -13,8 +15,12 @@ fn part_one(filename: &str) -> usize {
         .unwrap();
 }
 
-fn trace_down<'a>(value: usize, key: &'a str, maps: &'a Vec<CategoryMap>) -> (&'a str, usize) {
-    match maps.iter().find(|m| m.input_key == key) {
+fn trace_down<'a>(
+    value: usize,
+    key: &'a str,
+    maps: &'a HashMap<String, CategoryMap>,
+) -> (&'a str, usize) {
+    match maps.get(key) {
         None => (key, value),
         Some(m) => trace_down(m.translate(value), &m.output_key, maps),
     }
@@ -55,7 +61,7 @@ impl RangeConversion {
     }
 }
 
-fn parse_file(filename: &str) -> (Vec<usize>, Vec<CategoryMap>) {
+fn parse_file(filename: &str) -> (Vec<usize>, HashMap<String, CategoryMap>) {
     let text = std::fs::read_to_string(filename).unwrap();
     let mut entries = text.split("\n\n");
 
@@ -67,7 +73,14 @@ fn parse_file(filename: &str) -> (Vec<usize>, Vec<CategoryMap>) {
         .map(|v| v.parse().unwrap())
         .collect();
 
-    let maps: Vec<CategoryMap> = entries.map(CategoryMap::from).collect();
+    let maps: HashMap<String, CategoryMap> =
+        entries
+            .map(CategoryMap::from)
+            .fold(HashMap::new(), |mut acc, map| {
+                acc.insert(String::from(map.input_key.clone()), map);
+
+                return acc;
+            });
 
     return (seeds, maps);
 }
